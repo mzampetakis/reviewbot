@@ -1,0 +1,27 @@
+version: "3.7"
+services:
+
+  db:
+    container_name: my-reviewbot-db
+    hostname: myreviewbotdb
+    image: mariadb:10.6
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:-root_pass}"
+      MYSQL_DATABASE: "${DB_NAME:-myreviewbot}"
+      MYSQL_USER: "${DB_USER:-user}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:-pass}"
+    ports:
+      - "${DB_PORT:-3306}:3306"
+
+  app:
+    container_name: my-reviewbot
+    hostname: myreviewbot
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "${HTTP_PORT:-4444}:${HTTP_PORT:-4444}"
+    depends_on:
+      - db
