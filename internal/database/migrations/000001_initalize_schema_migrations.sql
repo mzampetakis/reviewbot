@@ -25,14 +25,26 @@ CREATE TABLE `orders` (
 CREATE TABLE `order_products` (
     `uuid` varchar(255) NOT NULL,
     `order_uuid` varchar(255) DEFAULT NULL,
+    `product_uuid` varchar(255) DEFAULT NULL,
     `items` int,
     PRIMARY KEY (`uuid`),
     FOREIGN KEY (order_uuid) REFERENCES orders(uuid),
+    FOREIGN KEY (product_uuid) REFERENCES Products(uuid),
     KEY `order_products_uuid_idx` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE `products` (
+    `uuid` varchar(255) NOT NULL,
+    `name` varchar(255) DEFAULT NULL,
+    `description` text DEFAULT NULL,
+    `image` varchar(255) DEFAULT NULL,
+    `availability_status` varchar(255) DEFAULT NULL,
+    `available_items` int
+    PRIMARY KEY (`uuid`),
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- +migrate Down
 DROP TABLE IF EXISTS `order_products`;
 DROP TABLE IF EXISTS `orders`;
+DROP TABLE IF EXISTS `products`;
 DROP TABLE IF EXISTS `customers`;
