@@ -1,7 +1,7 @@
 # ReviewBot 🤖
 ReviewBot is a review chatbot that gathers customers' reviews after a completed purchase.
 
-## Requirements✅
+## Requirements ✅
 - Go v1.20
 - make
 - Docker
@@ -68,6 +68,37 @@ In order to run the `reviewbot` run:
 make run
 ```
 Logs stream is the stdout.
+
+## Project Structure 📏
+
+Here you can find details about how this project is structured. This will help you decide where to put anything new
+added.
+
+| Folder    | Description                                    |
+|-----------|------------------------------------------------|
+| **`app`** | Contains various helper application entities.  |
+
+| Folder             | Description                                                               |
+|--------------------|---------------------------------------------------------------------------|
+| **`cmd`**          | Contains the main applications of the project.                            |
+| `↳ cmd/reviewbot/` | Contains the applications of the project alongside the main function.     |
+| `↳ cmd/reviewbot/api`   | Contains the api applications of the project alongside the main function. |
+
+| Folder                     | Description                                                                         |
+|----------------------------|-------------------------------------------------------------------------------------|
+| **`internal`**             | Contains various helper packages used by the application.                           |
+| `↳ internal/database/`     | Contains the application's database connection and migration logic                  |
+| `↳ internal/domain/`       | Contains the application's specific packages.                                       |
+| `↳ internal/domain/orders` | Contains the application's clerks service.                                          |
+| `↳ internal/env`           | Contains functionality to retrieve the application's configuration through EnvVars. |
+| `↳ internal/version`       | Contains functionality to retrieve the application's version through Git.           |
+
+
+| Folder                          | Description                                                                                                      |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------|
+| **`pkg`**                       | Contains various packages used by the application but can also be used as standalone libraries by other applications. |
+| `↳ pkg/responsegenerator/`          | Contains the Response Generator functionality through interface.                                                 |
+| `↳ pkg/sentimentanalyzer` | Contains the Sentiment Analyzer functionality through interface.                                                 |
 
 
 ## Contribute 🙋
