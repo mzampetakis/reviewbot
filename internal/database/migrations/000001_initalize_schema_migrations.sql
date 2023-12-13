@@ -2,11 +2,11 @@
 
 CREATE TABLE `customers` (
     `uuid` varchar(255) NOT NULL,
-    `first_name` varchar(255) DEFAULT NULL,
-    `last_name` varchar(255) DEFAULT NULL,
-    `email` varchar(300) DEFAULT NULL,
-    `phone_number` varchar(100) DEFAULT NULL,
-    `registration_date` datetime DEFAULT NULL,
+    `first_name` varchar(255) NOT NULL,
+    `last_name` varchar(255) NOT NULL,
+    `email` varchar(300) NOT NULL,
+    `phone_number` varchar(100) NOT NULL,
+    `registration_date` datetime NOT NULL,
     PRIMARY KEY (`uuid`),
     KEY `customers_uuid_idx` (`uuid`),
     KEY `customers_email_idx` (`email`)
@@ -14,37 +14,38 @@ CREATE TABLE `customers` (
 
 CREATE TABLE `orders` (
     `uuid` varchar(255) NOT NULL,
-    `customer_uuid` varchar(255) DEFAULT NULL,
-    `status` varchar(255) DEFAULT NULL,
-    `placed_date` datetime DEFAULT NULL,
+    `customer_uuid` varchar(255) NOT NULL,
+    `status` varchar(255) NOT NULL,
+    `placed_date` datetime NOT NULL,
     PRIMARY KEY (`uuid`),
     FOREIGN KEY (customer_uuid) REFERENCES customers(uuid),
     KEY `orders_uuid_idx` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE `order_products` (
-    `uuid` varchar(255) NOT NULL,
-    `order_uuid` varchar(255) DEFAULT NULL,
-    `product_uuid` varchar(255) DEFAULT NULL,
-    `items` int,
-    PRIMARY KEY (`uuid`),
-    FOREIGN KEY (order_uuid) REFERENCES orders(uuid),
-    FOREIGN KEY (product_uuid) REFERENCES Products(uuid),
-    KEY `order_products_uuid_idx` (`uuid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 CREATE TABLE `products` (
     `uuid` varchar(255) NOT NULL,
-    `name` varchar(255) DEFAULT NULL,
+    `name` varchar(255) NOT NULL,
     `description` text DEFAULT NULL,
     `image` varchar(255) DEFAULT NULL,
     `availability_status` varchar(255) DEFAULT NULL,
-    `available_items` int
+    `available_items` int,
+    PRIMARY KEY (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE `order_products` (
+    `uuid` varchar(255) NOT NULL,
+    `order_uuid` varchar(255) NOT NULL,
+    `product_uuid` varchar(255) NOT NULL,
+    `items` int,
     PRIMARY KEY (`uuid`),
+    FOREIGN KEY (order_uuid) REFERENCES orders(uuid),
+    FOREIGN KEY (product_uuid) REFERENCES products(uuid),
+    KEY `order_products_uuid_idx` (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- +migrate Down
 DROP TABLE IF EXISTS `order_products`;
-DROP TABLE IF EXISTS `orders`;
 DROP TABLE IF EXISTS `products`;
+DROP TABLE IF EXISTS `orders`;
 DROP TABLE IF EXISTS `customers`;

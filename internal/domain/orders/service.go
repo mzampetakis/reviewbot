@@ -22,6 +22,12 @@ func (s *Service) OrderByUUID(ctx context.Context, orderUUID string) (*app.Order
 	return s.repo.GetOrderByUUID(ctx, orderUUID)
 }
 
+// UpdateOrderStatusByUUID updates an order status by its UUID.
+func (s *Service) UpdateOrderStatusByUUID(ctx context.Context, orderUUID string,
+	orderStatus app.OrderStatus) error {
+	return s.repo.UpdateOrderStatusByOrderUUID(ctx, orderUUID, string(orderStatus))
+}
+
 // OrderProductsByOrderUUID gets an order by its UUID.
 func (s *Service) OrderProductsByOrderUUID(ctx context.Context, orderUUID string) ([]app.OrderProduct, error) {
 	return s.repo.GetOrderProductsByOrderUUID(ctx, orderUUID)

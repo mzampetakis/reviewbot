@@ -8,6 +8,7 @@ import (
 	"os"
 	"reviewbot/cmd/reviewbot/api"
 	"reviewbot/internal/database"
+	"reviewbot/internal/domain/orders"
 	"reviewbot/internal/env"
 	"reviewbot/internal/version"
 	"runtime/debug"
@@ -55,5 +56,15 @@ func run(logger *slog.Logger) error {
 
 	logger.Info("version: " + version.Get())
 
-	return nil
+	app := api.Application{
+		Config: cfg,
+		DB:     db,
+		Logger: logger,
+	}
+	logger.Info("Starting...")
+	ordersRepo := orders.NewDatabaseRepository(db.DB)
+	ordersService := orders.NewService(ordersRepo, logger)
+	srv := api.NewServer(ordersService, &app)
+	logger.Info("Running...")
+	return srv.ServeHTTP()
 }

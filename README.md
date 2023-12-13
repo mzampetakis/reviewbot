@@ -89,7 +89,7 @@ added.
 | **`internal`**             | Contains various helper packages used by the application.                           |
 | `↳ internal/database/`     | Contains the application's database connection and migration logic                  |
 | `↳ internal/domain/`       | Contains the application's specific packages.                                       |
-| `↳ internal/domain/orders` | Contains the application's clerks service.                                          |
+| `↳ internal/domain/orders` | Contains the application's orders service.                                          |
 | `↳ internal/env`           | Contains functionality to retrieve the application's configuration through EnvVars. |
 | `↳ internal/version`       | Contains functionality to retrieve the application's version through Git.           |
 
@@ -110,3 +110,9 @@ For a complete list of makefile commands run:
 ```
 make help
 ```
+
+### Further Improvements
+
+There are several improvements that can be done to this project. Here are some indicative:
+- Add more tests as we cover just a basic functionality among all stacks
+- Add an Open API specification file for the served API

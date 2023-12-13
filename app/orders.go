@@ -54,5 +54,6 @@ type Product struct {
 // OrdersRepository should be implemented to get access to the data store.
 type OrdersRepository interface {
 	GetOrderByUUID(ctx context.Context, uuid string) (*Order, error)
+	UpdateOrderStatusByOrderUUID(ctx context.Context, uuid string, status string) error
 	GetOrderProductsByOrderUUID(ctx context.Context, uuid string) ([]OrderProduct, error)
 }

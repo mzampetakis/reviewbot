@@ -6,11 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
-	"reviewbot/app"
-
 	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	"reviewbot/app"
 	"time"
 )
 
@@ -151,6 +150,29 @@ func (ds *DatabaseRepository) GetOrderByUUID(ctx context.Context, orderUUID stri
 	return &order, nil
 }
 
+// UpdateOrderStatusByOrderUUID updates an order's status by its UUID.
+func (ds *DatabaseRepository) UpdateOrderStatusByOrderUUID(ctx context.Context, orderUUID string,
+	orderStatus string) error {
+	dialect := goqu.Dialect("mysql")
+
+	sqlQuery, _, err := dialect.Update("orders").Set(goqu.Record{"status": orderStatus}).
+		Where(goqu.C("uuid").Eq(orderUUID)).ToSQL()
+	fmt.Println(sqlQuery)
+	if err != nil {
+		return app.NewError("Error while preparing update for order",
+			fmt.Errorf("update order by uuid: %w", err))
+	}
+	res, err := ds.db.ExecContext(ctx, sqlQuery)
+	if err != nil {
+		return app.NewError("Error while updating order", fmt.Errorf("update by uuid: %w", err))
+	}
+	if rows, err := res.RowsAffected(); rows == 0 || err != nil {
+		return app.NewError("Error while updating order", app.ErrNoRecords)
+	}
+
+	return nil
+}
+
 // GetOrderProductsByOrderUUID retrieves from storage an order's products by order's UUID.
 func (ds *DatabaseRepository) GetOrderProductsByOrderUUID(ctx context.Context, orderUUID string) ([]app.OrderProduct, error) {
 	dialect := goqu.Dialect("mysql")
@@ -178,7 +200,7 @@ func (ds *DatabaseRepository) GetOrderProductsByOrderUUID(ctx context.Context, o
 		}
 
 		// Fetch ProductStore item
-		sqlQuery, _, err := dialect.Select("uuid", "name", "status", "description", "image", "availability_status", "available_items").
+		sqlQuery, _, err := dialect.Select("uuid", "name", "description", "image", "availability_status", "available_items").
 			From("products").Where(goqu.C("uuid").Eq(orderProduct.ProductUUID)).ToSQL()
 		if err != nil {
 			return nil, app.NewError("Error while preparing querying for product",

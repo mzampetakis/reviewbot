@@ -75,3 +75,5 @@ stop:
 .PHONY: clean
 clean:
 	docker-compose rm --stop --force
+	docker image rm 'reviewbot-app'
+
