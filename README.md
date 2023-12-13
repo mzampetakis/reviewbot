@@ -1,12 +1,20 @@
 # ReviewBot 🤖
 ReviewBot is a review chatbot that gathers customers' reviews after a completed purchase.
 
+## Assumptions 🙌🏻
+
+We have made some assumption at this project in order to simplify and accelerate its development. These assumptions 
+are: 
+- The sentiment analysis and the text generator have been implemented as dummy but 3rd party integrations can be added
+- For the chat implementation we have used a websocket communication channel
+- Review chat support only one connection (client) at a time
+- Database is pre-populated with some dummy data for testing purposes
+
 ## Requirements ✅
 - Go v1.20
 - make
 - Docker
 - Docker-compose
-
 
 ## Getting started 💻
 
@@ -116,3 +124,4 @@ make help
 There are several improvements that can be done to this project. Here are some indicative:
 - Add more tests as we cover just a basic functionality among all stacks
 - Add an Open API specification file for the served API
+

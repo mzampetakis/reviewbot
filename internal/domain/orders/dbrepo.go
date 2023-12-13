@@ -8,6 +8,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"reviewbot/app"
 	"time"
@@ -157,7 +158,6 @@ func (ds *DatabaseRepository) UpdateOrderStatusByOrderUUID(ctx context.Context, 
 
 	sqlQuery, _, err := dialect.Update("orders").Set(goqu.Record{"status": orderStatus}).
 		Where(goqu.C("uuid").Eq(orderUUID)).ToSQL()
-	fmt.Println(sqlQuery)
 	if err != nil {
 		return app.NewError("Error while preparing update for order",
 			fmt.Errorf("update order by uuid: %w", err))
@@ -168,6 +168,29 @@ func (ds *DatabaseRepository) UpdateOrderStatusByOrderUUID(ctx context.Context, 
 	}
 	if rows, err := res.RowsAffected(); rows == 0 || err != nil {
 		return app.NewError("Error while updating order", app.ErrNoRecords)
+	}
+
+	return nil
+}
+
+// AddOrderProductReviewByOrderProductUUID adds an order's product review by its UUID.
+func (ds *DatabaseRepository) AddOrderProductReviewByOrderProductUUID(ctx context.Context, orderProductUUID string,
+	reviewScore int64) error {
+	dialect := goqu.Dialect("mysql")
+
+	sqlQuery, _, err := dialect.Insert("order_product_reviews").Cols("uuid", "order_product_uuid",
+		"score").Vals(goqu.Vals{uuid.New().String(), orderProductUUID, reviewScore}).ToSQL()
+	fmt.Println(sqlQuery)
+	if err != nil {
+		return app.NewError("Error while preparing insert for review",
+			fmt.Errorf("insert review by uuid: %w", err))
+	}
+	res, err := ds.db.ExecContext(ctx, sqlQuery)
+	if err != nil {
+		return app.NewError("Error while inserting order product review", fmt.Errorf("insert by uuid: %w", err))
+	}
+	if rows, err := res.RowsAffected(); rows == 0 || err != nil {
+		return app.NewError("Error while inserting order product review", app.ErrNoRecords)
 	}
 
 	return nil

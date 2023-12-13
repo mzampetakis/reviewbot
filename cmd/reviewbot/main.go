@@ -11,6 +11,8 @@ import (
 	"reviewbot/internal/domain/orders"
 	"reviewbot/internal/env"
 	"reviewbot/internal/version"
+	"reviewbot/pkg/responsegenerator/dummygenerator"
+	"reviewbot/pkg/sentimentanalyzer/dummyanalyzer"
 	"runtime/debug"
 )
 
@@ -63,8 +65,10 @@ func run(logger *slog.Logger) error {
 	}
 	logger.Info("Starting...")
 	ordersRepo := orders.NewDatabaseRepository(db.DB)
-	ordersService := orders.NewService(ordersRepo, logger)
+
+	ordersService := orders.NewService(ordersRepo, dummygenerator.NewDummyGenerator(),
+		dummyganalyzer.NewDummyAnalyzer(), logger)
 	srv := api.NewServer(ordersService, &app)
 	logger.Info("Running...")
-	return srv.ServeHTTP()
+	return srv.Serve()
 }

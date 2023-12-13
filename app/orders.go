@@ -12,6 +12,7 @@ const (
 	OrderStatusPreparing OrderStatus = "preparing"
 	OrderStatusSending   OrderStatus = "sending"
 	OrderStatusCompleted OrderStatus = "completed"
+	OrderStatusReviewed  OrderStatus = "reviewed"
 )
 
 // Customer represents a customer entity.
@@ -56,4 +57,6 @@ type OrdersRepository interface {
 	GetOrderByUUID(ctx context.Context, uuid string) (*Order, error)
 	UpdateOrderStatusByOrderUUID(ctx context.Context, uuid string, status string) error
 	GetOrderProductsByOrderUUID(ctx context.Context, uuid string) ([]OrderProduct, error)
+	AddOrderProductReviewByOrderProductUUID(ctx context.Context, orderProductUUID string,
+		score int64) error
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"net/http"
 	"reviewbot/app"
 	"time"
@@ -60,7 +61,6 @@ func (srv *Server) getOrderByUUID(w http.ResponseWriter, r *http.Request) {
 	orderUUID := mux.Vars(r)["order_uuid"]
 	order, err := srv.UserService.OrderByUUID(ctx, orderUUID)
 	if err != nil {
-		log.Error(err.Error())
 		log.With("success", false, "err", err)
 		if errors.Is(err, app.ErrNoRecords) {
 			NotFoundError(w, err)
@@ -83,13 +83,13 @@ func (srv *Server) updateOrderStatusByUUID(w http.ResponseWriter, r *http.Reques
 	orderStatusRequest := OrderStatusRequest{}
 	err := json.NewDecoder(r.Body).Decode(&orderStatusRequest)
 	if err != nil {
-		log.Error(err.Error())
 		log.With("success", false, "err", err)
 		BadRequestError(w, err)
 		return
 	}
 	if orderStatusRequest.Status != app.OrderStatusPreparing && orderStatusRequest.Status != app.OrderStatusPlaced &&
-		orderStatusRequest.Status != app.OrderStatusSending && orderStatusRequest.Status != app.OrderStatusCompleted {
+		orderStatusRequest.Status != app.OrderStatusSending && orderStatusRequest.Status != app.OrderStatusCompleted &&
+		orderStatusRequest.Status != app.OrderStatusReviewed {
 		err = errors.New("invalid status provided")
 		log.With("success", false, "err", err)
 		BadRequestError(w, err)
@@ -98,7 +98,6 @@ func (srv *Server) updateOrderStatusByUUID(w http.ResponseWriter, r *http.Reques
 
 	err = srv.UserService.UpdateOrderStatusByUUID(ctx, orderUUID, orderStatusRequest.Status)
 	if err != nil {
-		log.Error(err.Error())
 		log.With("success", false, "err", err)
 		if errors.Is(err, app.ErrNoRecords) {
 			NotFoundError(w, err)
@@ -119,7 +118,6 @@ func (srv *Server) getOrderProductsByOrderUUID(w http.ResponseWriter, r *http.Re
 	orderUUID := mux.Vars(r)["order_uuid"]
 	orderProducts, err := srv.UserService.OrderProductsByOrderUUID(ctx, orderUUID)
 	if err != nil {
-		log.Error(err.Error())
 		log.With("success", false, "err", err)
 		if errors.Is(err, app.ErrNoRecords) {
 			NotFoundError(w, err)
@@ -168,4 +166,61 @@ func transformOrderProductsToResponse(orderProducts []app.OrderProduct) []OrderP
 		})
 	}
 	return orderProductResponse
+}
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), handlerDefaultTimeout)
+	defer cancel()
+	log := srv.App.Logger.With(LogFieldKeyRequestID, GetReqID(ctx))
+
+	orderUUID := mux.Vars(r)["order_uuid"]
+	order, err := srv.UserService.OrderByUUID(ctx, orderUUID)
+	if err != nil {
+		log.With("success", false, "err", err)
+		if errors.Is(err, app.ErrNoRecords) {
+			NotFoundError(w, err)
+			return
+		}
+		ServerError(w, err)
+		return
+	}
+	if order.Status != app.OrderStatusCompleted {
+		err = errors.New("Order not completed. Only review for completed ordersis allowed.")
+		log.With("success", false, "err", err)
+		BadRequestError(w, err)
+		return
+	}
+
+	orderProducts, err := srv.UserService.OrderProductsByOrderUUID(ctx, orderUUID)
+	if err != nil {
+		log.With("success", false, "err", err)
+		if errors.Is(err, app.ErrNoRecords) {
+			NotFoundError(w, err)
+			return
+		}
+		ServerError(w, err)
+		return
+	}
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.With("success", false, "err", err)
+		ServerError(w, err)
+		return
+	}
+	defer conn.Close()
+
+	err = srv.UserService.ReviewOrderProducts(ctx, conn, order, orderProducts)
+	if err != nil {
+		log.With("success", false, "err", err)
+		ServerError(w, err)
+	}
 }

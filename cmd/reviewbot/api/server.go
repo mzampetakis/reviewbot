@@ -58,7 +58,7 @@ func NewServer(userService *orders.Service, config *Application) *Server {
 	return server
 }
 
-func (mySrv *Server) ServeHTTP() error {
+func (mySrv *Server) Serve() error {
 	srv := &http.Server{
 		Addr:         net.JoinHostPort(mySrv.App.Config.BaseURL, strconv.Itoa(mySrv.App.Config.HttpPort)),
 		Handler:      mySrv.routes(),
