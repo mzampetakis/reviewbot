@@ -28,7 +28,12 @@ CREATE TABLE `products` (
     `description` text DEFAULT NULL,
     `image` varchar(255) DEFAULT NULL,
     `availability_status` varchar(255) DEFAULT NULL,
+    `created_at`          datetime DEFAULT NULL,
+    `manufacturer`      varchar(255) DEFAULT NULL,
+    `vehicle`            varchar(255) DEFAULT NULL,
+    `id`                 varchar(255) DEFAULT NULL,
     `available_items` int,
+    KEY `products_id_idx` (`id`),
     PRIMARY KEY (`uuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

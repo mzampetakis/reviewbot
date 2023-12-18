@@ -2,11 +2,15 @@ package orders
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"github.com/gorilla/websocket"
 	"golang.org/x/exp/slog"
+	"net/http"
 	"reviewbot/app"
 	"reviewbot/pkg/responsegenerator"
 	"reviewbot/pkg/sentimentanalyzer"
+	"time"
 )
 
 // Service wraps the user repository.
@@ -39,6 +43,61 @@ func (s *Service) UpdateOrderStatusByUUID(ctx context.Context, orderUUID string,
 // OrderProductsByOrderUUID gets an order by its UUID.
 func (s *Service) OrderProductsByOrderUUID(ctx context.Context, orderUUID string) ([]app.OrderProduct, error) {
 	return s.repo.GetOrderProductsByOrderUUID(ctx, orderUUID)
+}
+
+type RemoteProduct struct {
+	CreatedAt    time.Time `json:"createdAt"`
+	ProductName  string    `json:"productName"`
+	Manufacturer string    `json:"manufacturer"`
+	Vehicle      string    `json:"vehicle"`
+	ImageURL     string    `json:"image"`
+	ID           string    `json:"id"`
+}
+
+func (s *Service) PopulateProducts(ctx context.Context) error {
+	client := http.Client{}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://62daf70dd1d97b9e0c49ca5d.mockapi."+
+		"io/v1/products", nil)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= http.StatusBadRequest {
+		return errors.New("received error from remote server")
+	}
+
+	remoteProducts := []RemoteProduct{}
+	err = json.NewDecoder(resp.Body).Decode(&remoteProducts)
+	if err != nil {
+		return err
+	}
+
+	for _, remoteProduct := range remoteProducts {
+		product := app.Product{
+			Name:               remoteProduct.ProductName,
+			Description:        "",
+			Image:              remoteProduct.ImageURL,
+			AvailabilityStatus: "",
+			AvailableItems:     0,
+			CreatedAt:          remoteProduct.CreatedAt,
+			Manufacturer:       remoteProduct.Manufacturer,
+			Vehicle:            remoteProduct.Vehicle,
+			ID:                 remoteProduct.ID,
+		}
+		err := s.repo.AddProduct(ctx, product)
+
+		if err != nil {
+			s.logger.Error(err.Error())
+			continue
+		}
+	}
+
+	return nil
 }
 
 // ReviewOrderProducts requests from user to review the purchased products

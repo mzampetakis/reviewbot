@@ -50,6 +50,10 @@ type ProductStore struct {
 	Image              string
 	AvailabilityStatus string
 	AvailableItems     int
+	CreatedAt          time.Time `json:"createdAt"`
+	Manufacturer       string    `json:"manufacturer"`
+	Vehicle            string    `json:"vehicle"`
+	ID                 string    `json:"id"`
 }
 
 // DatabaseRepository implements the OrdersRepository interface.
@@ -268,4 +272,27 @@ func (ds *DatabaseRepository) GetProductByUUID(ctx context.Context, productUUID 
 
 	product := ds.ProductStoreToProduct(*productStore)
 	return &product, nil
+}
+
+func (ds *DatabaseRepository) AddProduct(ctx context.Context, product app.Product) error {
+	dialect := goqu.Dialect("mysql")
+	sqlQuery, _, err := dialect.Insert("products").Cols("uuid", "name", "description", "image",
+		"availability_status", "created_at", "manufacturer", "vehicle", "id",
+		"available_items").Vals(goqu.Vals{uuid.New().String(), product.Name, product.Description, product.Image,
+		product.AvailabilityStatus, product.CreatedAt, product.Manufacturer, product.Vehicle, product.ID,
+		product.AvailableItems}).ToSQL()
+	fmt.Println(sqlQuery)
+	if err != nil {
+		return app.NewError("Error while preparing insert for products",
+			fmt.Errorf("insert review by uuid: %w", err))
+	}
+	res, err := ds.db.ExecContext(ctx, sqlQuery)
+	if err != nil {
+		return app.NewError("Error while inserting order products", fmt.Errorf("insert by uuid: %w", err))
+	}
+	if rows, err := res.RowsAffected(); rows == 0 || err != nil {
+		return app.NewError("Error while inserting order products", app.ErrNoRecords)
+	}
+
+	return nil
 }

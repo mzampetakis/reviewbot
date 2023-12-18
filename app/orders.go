@@ -44,12 +44,16 @@ type OrderProduct struct {
 
 // Product represents a product entity.
 type Product struct {
-	UUID               string `json:"uuid"`
-	Name               string `json:"name"`
-	Description        string `json:"description"`
-	Image              string `json:"items"`
-	AvailabilityStatus string `json:"availability_status"`
-	AvailableItems     int    `json:"available_items"`
+	UUID               string    `json:"uuid"`
+	Name               string    `json:"name"`
+	Description        string    `json:"description"`
+	Image              string    `json:"items"`
+	AvailabilityStatus string    `json:"availability_status"`
+	AvailableItems     int       `json:"available_items"`
+	CreatedAt          time.Time `json:"createdAt"`
+	Manufacturer       string    `json:"manufacturer"`
+	Vehicle            string    `json:"vehicle"`
+	ID                 string    `json:"id"`
 }
 
 // OrdersRepository should be implemented to get access to the data store.
@@ -59,4 +63,5 @@ type OrdersRepository interface {
 	GetOrderProductsByOrderUUID(ctx context.Context, uuid string) ([]OrderProduct, error)
 	AddOrderProductReviewByOrderProductUUID(ctx context.Context, orderProductUUID string,
 		score int64) error
+	AddProduct(ctx context.Context, product Product) error
 }

@@ -77,10 +77,13 @@ func (mySrv *Server) Serve() error {
 		defer cancel()
 		shutdownErrorChan <- srv.Shutdown(ctx)
 	}()
+	err := mySrv.UserService.PopulateProducts(context.Background())
+	if err != nil {
+		return err
+	}
 
 	mySrv.App.Logger.Info("starting server", slog.Group("server", "addr", srv.Addr))
-
-	err := srv.ListenAndServe()
+	err = srv.ListenAndServe()
 	if !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
